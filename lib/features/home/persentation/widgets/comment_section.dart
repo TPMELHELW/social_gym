@@ -26,11 +26,11 @@ onCommentPress(BuildContext context, HomeController controller) {
                 CircleAvatar(
                   backgroundColor: Theme.of(context).colorScheme.primary,
                 ),
-                const Expanded(
-                  child: CustomTextFormField(
-                      hintText: 'Comment....',
-                      prefixIcon: Icon(Iconsax.message)),
-                ),
+                // const Expanded(
+                //   child: CustomTextFormField(
+                //       hintText: 'Comment....',
+                //       prefixIcon: Icon(Iconsax.message)),
+                // ),
                 IconButton(onPressed: () {}, icon: const Icon(Iconsax.send1))
               ],
             ),

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:gym_app/core/components/main_button.dart';
-import 'package:gym_app/features/subscription/persentation/plans_screen.dart';
 import 'package:gym_app/features/subscription/persentation/widgets/my_clipper.dart';
 
 class PlansCardWidget extends StatelessWidget {
   final String months, date, price, imagePath;
-  const PlansCardWidget(
-      {super.key,
-      required this.months,
-      required this.date,
-      required this.price,
-      required this.imagePath});
+  final void Function()? onPress;
+  const PlansCardWidget({
+    super.key,
+    required this.months,
+    required this.date,
+    required this.price,
+    required this.imagePath,
+    this.onPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +37,11 @@ class PlansCardWidget extends StatelessWidget {
                 ),
                 Text(
                   months,
-                  style: TextStyle(fontSize: 25),
+                  style: const TextStyle(fontSize: 25),
                 ),
                 Text(
                   date,
-                  style: TextStyle(fontSize: 25),
+                  style: const TextStyle(fontSize: 25),
                 ),
                 Container(
                   padding: const EdgeInsets.all(10),
@@ -49,7 +50,7 @@ class PlansCardWidget extends StatelessWidget {
                       borderRadius: BorderRadius.circular(15)),
                   child: Text(
                     price,
-                    style: TextStyle(fontSize: 30),
+                    style: const TextStyle(fontSize: 30),
                   ),
                 )
               ],
@@ -61,8 +62,8 @@ class PlansCardWidget extends StatelessWidget {
           height: 250,
         ),
         MainButton(
-          text: 'Change Plan',
-          onPress: () => Get.to(() => const PlansScreen()),
+          text: 'Select Plan',
+          onPress: onPress,
         )
       ],
     );

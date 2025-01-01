@@ -4,7 +4,8 @@ import 'package:gym_app/features/home/persentation/widgets/comment_section.dart'
 import 'package:iconsax/iconsax.dart';
 
 class PostWidget extends StatelessWidget {
-  const PostWidget({super.key});
+  final int index;
+  const PostWidget({super.key, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -27,25 +28,23 @@ class PostWidget extends StatelessWidget {
                 width: 10,
               ),
               Text(
-                'Mahmoud Elhelw',
+                controller.posts[index].fullName,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.secondary,
                 ),
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.25,
-              ),
-              Text(
-                'Time (Now)',
-                style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
-              )
             ],
           ),
+          // Text(
+          //   'Time (Now)',
+          //   // textAlign: TextAlign.left,
+          //   style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
+          // ),
           const SizedBox(
             height: 10,
           ),
-          const SelectableText(
-            'The Post Text Or Video',
+          SelectableText(
+            controller.posts[index].postText,
             textAlign: TextAlign.center,
           ),
           const SizedBox(

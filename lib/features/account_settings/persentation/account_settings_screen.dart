@@ -64,7 +64,7 @@ class AccountSettingsScreen extends StatelessWidget {
               itemCount: controller.itemData.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  onTap: () {},
+                  onTap: controller.itemData[index].onPress,
                   leading: controller.itemData[index].icon,
                   title: Text(controller.itemData[index].title),
                   trailing: controller.itemData[index].suffixWidget,

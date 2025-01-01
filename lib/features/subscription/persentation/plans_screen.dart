@@ -22,6 +22,7 @@ class PlansScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: PlansCardWidget(
+                    onPress: () => controller.onPress(index),
                     months: controller.pageData[index].months,
                     date: controller.pageData[index].date,
                     price: controller.pageData[index].price,

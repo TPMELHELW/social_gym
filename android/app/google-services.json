@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "563768774286",
+    "project_id": "socail-gym",
+    "storage_bucket": "socail-gym.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:563768774286:android:5f2a7c2222c42f6cd3c3df",
+        "android_client_info": {
+          "package_name": "com.example.gym_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1aWywDrSpc-RW2KH3PQtXhAOME_SDmAo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:gym_app/core/components/main_button.dart';
 import 'package:gym_app/core/constants/app_image_assets.dart';
 import 'package:gym_app/core/constants/app_strings.dart';
-import 'package:gym_app/features/auth/login/persentation/login_screen.dart';
-import 'package:gym_app/features/auth/signup/persentation/signup_screen.dart';
+import 'package:gym_app/features/auth/persentation/login/login_screen.dart';
+import 'package:gym_app/features/auth/persentation/signup/signup_screen.dart';
 import 'package:gym_app/features/onboarding/welcome_controller.dart';
 
 class WelcomeScreen extends StatelessWidget {
