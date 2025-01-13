@@ -5,12 +5,14 @@ class CustomTextFormField extends StatelessWidget {
   final Widget prefixIcon;
   final TextEditingController controller;
   final String? Function(String?)? validator;
+  final Color fillColor;
   const CustomTextFormField({
     super.key,
     required this.hintText,
     required this.prefixIcon,
     required this.controller,
     this.validator,
+    this.fillColor = const Color.fromARGB(255, 33, 33, 33),
   });
 
   @override
@@ -28,7 +30,7 @@ class CustomTextFormField extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide.none,
           ),
-          fillColor: Theme.of(context).colorScheme.primary,
+          fillColor: fillColor,
           filled: true,
           hintText: hintText,
           hintStyle: TextStyle(

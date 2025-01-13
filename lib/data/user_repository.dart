@@ -75,4 +75,13 @@ class UserRepository {
       throw Exception(e);
     }
   }
+
+  Future<List<QueryDocumentSnapshot>> getAllUsersData() async {
+    try {
+      final data = await _db.collection('Users').get();
+      return data.docs;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

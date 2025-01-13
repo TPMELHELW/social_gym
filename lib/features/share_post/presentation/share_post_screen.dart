@@ -5,11 +5,12 @@ import 'package:get/get.dart';
 import 'package:gym_app/core/components/custom_text_form_field.dart';
 import 'package:gym_app/core/constants/app_enum.dart';
 import 'package:gym_app/core/validation/validation.dart';
-import 'package:gym_app/features/home/controller/home_controller.dart';
+import 'package:gym_app/features/share_post/controller/share_post_controller.dart';
 import 'package:iconsax/iconsax.dart';
 
 class SharePostScreen extends StatelessWidget {
-  const SharePostScreen({super.key});
+  final bool isEdit;
+  const SharePostScreen({super.key, this.isEdit = false});
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +19,8 @@ class SharePostScreen extends StatelessWidget {
           child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          GetBuilder<HomeController>(
-              init: HomeController.instance,
+          GetBuilder<SharePostController>(
+              init: Get.put(SharePostController()),
               builder: (controller) {
                 return Container(
                   padding: const EdgeInsets.all(10),
@@ -51,7 +52,9 @@ class SharePostScreen extends StatelessWidget {
                           controller.statusRequest == StatusRequest.loading
                               ? const CircularProgressIndicator()
                               : IconButton(
-                                  onPressed: () => controller.postFun(),
+                                  onPressed: () => isEdit
+                                      ? controller.editPost()
+                                      : controller.postFun(),
                                   icon: const Icon(Iconsax.send1))
                         ],
                       ),

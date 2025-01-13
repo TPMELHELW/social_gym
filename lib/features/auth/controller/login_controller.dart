@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -5,6 +6,7 @@ import 'package:gym_app/core/constants/app_enum.dart';
 import 'package:gym_app/core/functions/check_internet.dart';
 import 'package:gym_app/core/functions/snack_bar.dart';
 import 'package:gym_app/data/auth_repository.dart';
+import 'package:gym_app/features/auth/model/user_model.dart';
 import 'package:gym_app/features/navigation/persentation/navigation_screen.dart';
 
 class LoginController extends GetxController {
@@ -36,7 +38,11 @@ class LoginController extends GetxController {
 
       final cred = await _authRepository.signInWithEmail(
           email.text.trim(), password.text.trim());
-      print(cred['UserName']);
+
+      box.write(
+          'UserData',
+          UserModel.fromSnapshot(
+              cred as DocumentSnapshot<Map<String, dynamic>>));
       box.write('FullName', cred['UserName']);
       box.write('Email', cred['Email']);
 

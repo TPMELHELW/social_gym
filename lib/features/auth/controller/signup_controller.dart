@@ -37,15 +37,17 @@ class SignupController extends GetxController {
       final user = await _authRepository.signUpWithEmail(
           email.text.trim(), password.text.trim());
       final userData = UserModel(
-          id: user.user!.uid,
-          firstName: firstName.text,
-          lastName: lastName.text,
-          email: email.text.trim(),
-          number: '',
-          userName: '${firstName.text.trim()} ${lastName.text.trim()}',
-          profilePicture: '',
-          isApproved: false,
-          plan: '');
+        id: user.user!.uid,
+        firstName: firstName.text,
+        lastName: lastName.text,
+        email: email.text.trim(),
+        number: '',
+        userName: '${firstName.text.trim()} ${lastName.text.trim()}',
+        profilePicture: '',
+        isApproved: false,
+        plan: '',
+        friendList: [],
+      );
 
       await UserRepository().saveUserInf(userData);
 

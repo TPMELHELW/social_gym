@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
@@ -9,23 +7,44 @@ import 'package:gym_app/core/constants/app_enum.dart';
 import 'package:gym_app/core/functions/check_internet.dart';
 import 'package:gym_app/core/functions/snack_bar.dart';
 import 'package:gym_app/data/post_repository.dart';
+import 'package:gym_app/data/user_repository.dart';
+import 'package:gym_app/features/auth/model/user_model.dart';
+import 'package:gym_app/features/home/model/comment_model.dart';
 import 'package:gym_app/features/home/model/post_model.dart';
-import 'package:gym_app/features/navigation/persentation/navigation_screen.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
 
 class HomeController extends GetxController {
+  ///Veriable
   static HomeController get instance => Get.find<HomeController>();
-  late StatusRequest statusRequest;
-  late TextEditingController postController;
-  List<PostModel> posts = [];
-  late XFile? imageFile;
+  final ScrollController scrollController = ScrollController();
+  final currentUser = FirebaseAuth.instance.currentUser!.uid;
   final PostRepository postRepository = Get.put(PostRepository());
-  final GlobalKey<FormState> formState = GlobalKey<FormState>();
+  final GlobalKey<FormState> commentFormState = GlobalKey<FormState>();
+  final GlobalKey<FormState> secondCommentFormState = GlobalKey<FormState>();
+  final UserRepository userRepository = Get.put(UserRepository());
   final box = GetStorage();
-  int commentNumber = 0;
+  late TextEditingController commentController;
+  late TextEditingController secondCommentController;
+  late StatusRequest statusRequest;
+  bool _hasMoreData = true;
   bool showComment = true;
+  List<PostModel> posts = [];
   int? activeCommentIndex;
+  int commentNumber = 0;
+  int currentPost = 0;
+
+  ///Delete Post
+  Future<void> deletePost() async {
+    try {
+      await postRepository.deletePost(posts[currentPost].postId);
+      posts.removeAt(currentPost);
+      Get.back();
+      update();
+    } catch (e) {
+      showErrorSnackbar('Error', e.toString());
+    }
+  }
+
+  ///Functions
   void toggleComment(int index) {
     if (activeCommentIndex == index) {
       activeCommentIndex = null;
@@ -35,123 +54,145 @@ class HomeController extends GetxController {
     update();
   }
 
-  Future<void> uploadImage() async {
-    try {
-      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        if (!await checkInternet()) {
-          statusRequest = StatusRequest.offline;
-          return;
-        }
-        final finalFile = File(image.path);
-        CroppedFile? cropperImage =
-            await ImageCropper().cropImage(sourcePath: finalFile.path);
-        imageFile = XFile(cropperImage!.path);
-        update();
-      }
-    } catch (e) {
-      showErrorSnackbar('Error', e.toString());
+  ///Get All Posts Fun
+  Future<void> _fetchData() async {
+    if (!_hasMoreData) return;
+
+    final snapshot = await postRepository.getAllPosts();
+    if (snapshot.docs.length < 10) {
+      _hasMoreData = false;
     }
+    final docs = snapshot.docs;
+    final data = docs
+        .map((value) => PostModel.fromSnapshot(
+            value as DocumentSnapshot<Map<String, dynamic>>))
+        .toList();
+    posts.addAll(data);
+
+    update();
   }
 
-  Future<void> postFun() async {
+  ///Add Comment Fun
+  Future<void> addComment(int mainIndex, int? index) async {
     try {
       if (!await checkInternet()) {
-        statusRequest = StatusRequest.offline;
-        update();
         return;
       }
 
-      statusRequest = StatusRequest.loading;
-      update();
-      if (imageFile == null) {
-        if (!formState.currentState!.validate()) {
-          statusRequest = StatusRequest.notValidate;
-          update();
+      var post = {};
+      if (index == null) {
+        if (!commentFormState.currentState!.validate()) {
           return;
-        } else {
-          final post = PostModel(
-            postText: postController.text,
-            imagePath: '',
-            videoPath: '',
-            userId: FirebaseAuth.instance.currentUser!.uid,
+        }
+        final comment = CommentModel(
             fullName: box.read('FullName'),
-          );
+            commentText: commentController.text,
+            likes: [],
+            userId: currentUser,
+            comments: []);
+        posts[mainIndex].comments.add(comment);
 
-          await postRepository.postAll(post);
-          posts.add(post);
-
-          Get.off(() => const NavigationScreen());
-
-          statusRequest = StatusRequest.success;
-          update();
+        post = posts[mainIndex].toJson();
+        update();
+      } else {
+        if (!secondCommentFormState.currentState!.validate()) {
           return;
+        }
+        final comment = CommentModel(
+            fullName: box.read('FullName'),
+            commentText: secondCommentController.text,
+            likes: [],
+            userId: currentUser,
+            comments: []);
+        posts[mainIndex].comments[index].comments.add(comment);
+
+        post = posts[mainIndex].toJson();
+        update();
+      }
+      await postRepository.postUpdate(posts[mainIndex].postId, post);
+      commentController.clear();
+      secondCommentController.clear();
+      update();
+    } catch (e) {
+      showErrorSnackbar('Error', e.toString());
+    }
+  }
+
+  ///Add Friend
+  Future<void> addFriend(index) async {
+    try {
+      UserModel userData = box.read('UserData');
+      userData.friendList.add(posts[index].userId);
+      await userRepository.updateSingleUserInf(userData.toJson());
+      update();
+    } catch (e) {
+      showErrorSnackbar('Error', e.toString());
+    }
+  }
+
+  ///Remove Friend
+  Future<void> removeFriend(index) async {
+    try {
+      UserModel userData = box.read('UserData');
+      userData.friendList.remove(posts[index].userId);
+      await userRepository.updateSingleUserInf(userData.toJson());
+      update();
+    } catch (e) {
+      showErrorSnackbar('Error', e.toString());
+    }
+  }
+
+  ///Likes Fun
+  Future<void> likeFun(
+    int postIndex,
+    int? commentIndex,
+    int? commentOfCommentIndex,
+  ) async {
+    try {
+      List currentPost = posts[postIndex].likes;
+
+      if (commentIndex != null) {
+        if (commentOfCommentIndex == null) {
+          currentPost = posts[postIndex].comments[commentIndex].likes;
+        } else {
+          currentPost = posts[postIndex]
+              .comments[commentIndex]
+              .comments[commentOfCommentIndex]
+              .likes;
         }
       }
 
-      var random = Random();
-      int randomNumber = random.nextInt(100000000);
-      final url = await postRepository.postImage(
-          '${imageFile.hashCode}$randomNumber', imageFile!);
-
-      final post = PostModel(
-        postText: postController.text,
-        imagePath: url,
-        videoPath: '',
-        userId: FirebaseAuth.instance.currentUser!.uid,
-        fullName: box.read('FullName'),
-      );
-
-      await postRepository.postAll(post);
-      posts.insert(0, post);
-
-      Get.off(() => const NavigationScreen());
-      statusRequest = StatusRequest.success;
-      update();
+      if (currentPost.contains(currentUser)) {
+        currentPost.remove(currentUser);
+        update();
+      } else {
+        currentPost.add(currentUser);
+        update();
+      }
+      final data = posts[postIndex].toJson();
+      await postRepository.postUpdate(posts[postIndex].postId, data);
     } catch (e) {
       showErrorSnackbar('Error', e.toString());
-      statusRequest = StatusRequest.serverFailure;
-      update();
     }
   }
 
-  DocumentSnapshot? lastDocument;
-  bool isLoading = false;
-  List<DocumentSnapshot> documents = [];
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  Future<void> fetchMoreData() async {
-    if (isLoading || lastDocument == null) return;
-    isLoading = true;
-
-    final QuerySnapshot snapshot = await _firestore
-        .collection('yourCollection')
-        .startAfterDocument(lastDocument!)
-        .limit(10)
-        .get();
-    final List<DocumentSnapshot> newDocuments = snapshot.docs;
-    if (newDocuments.isNotEmpty) {
-      lastDocument = newDocuments.last;
-      documents.addAll(newDocuments);
-    }
-    isLoading = false;
-  }
-
-  Future<void> getPosts() async {
-    try {
-      posts = await postRepository.getInitialPosts();
-      update();
-    } catch (e) {
-      showErrorSnackbar('Error', e.toString());
+  void _scrollListener() {
+    if (scrollController.position.pixels ==
+        scrollController.position.maxScrollExtent) {
+      _fetchData();
     }
   }
 
   @override
   void onInit() {
-    getPosts();
-    imageFile = null;
-    postController = TextEditingController();
+    commentController = TextEditingController();
+    secondCommentController = TextEditingController();
+    final ss = box.read('UserData');
+    print(ss['FirstName']);
+
     statusRequest = StatusRequest.init;
+    scrollController.addListener(_scrollListener);
+    _fetchData();
     super.onInit();
   }
 }

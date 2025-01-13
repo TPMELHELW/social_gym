@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gym_app/data/post_repository.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:gym_app/features/home/controller/home_controller.dart';
 import 'package:gym_app/features/home/persentation/widgets/post_widget.dart';
 import 'package:gym_app/features/share_post/presentation/share_post_screen.dart';
@@ -11,12 +11,15 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(HomeController());
+    Get.put(HomeController());
     return SafeArea(
       child: Column(
         children: [
           GestureDetector(
-            onTap: () => Get.to(() => const SharePostScreen()),
+            onTap: () {
+              GetStorage().write('isEdit', false);
+              Get.to(() => const SharePostScreen());
+            },
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -50,22 +53,21 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          GetBuilder<HomeController>(builder: (cotnroller) {
-            return NotificationListener(
-              onNotification: (ScrollNotification scrollInfo) {
-                if (scrollInfo.metrics.pixels ==
-                    scrollInfo.metrics.maxScrollExtent) {
-                  // fetchMoreData();
-                  PostRepository().fetchMoreData();
-                  return true;
-                }
-                return false;
-              },
-              child: Expanded(
+          GetBuilder<HomeController>(builder: (controller) {
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 100),
                 child: ListView.builder(
+                    controller: controller.scrollController,
                     padding: const EdgeInsets.all(10),
-                    itemCount: controller.posts.length,
+                    itemCount: controller.posts.length + 1,
                     itemBuilder: (context, index) {
+                      if (index == controller.posts.length) {
+                        // return controller.isLoading
+                        //     ? const Center(child: CircularProgressIndicator())
+                        //     : const SizedBox.shrink();
+                        return const SizedBox();
+                      }
                       return PostWidget(
                         index: index,
                       );

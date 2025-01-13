@@ -10,9 +10,11 @@ class UserModel {
   String profilePicture;
   bool isApproved;
   String plan;
+  List friendList;
 
   UserModel(
       {required this.id,
+      required this.friendList,
       required this.firstName,
       required this.lastName,
       required this.userName,
@@ -31,7 +33,8 @@ class UserModel {
       'PhoneNumber': number,
       'ProfilePicture': profilePicture,
       'isApproved': isApproved,
-      'Plan': plan
+      'Plan': plan,
+      'FriendList': friendList,
     };
   }
 
@@ -45,6 +48,7 @@ class UserModel {
         profilePicture: '',
         isApproved: false,
         plan: '',
+        friendList: [],
       );
 
   factory UserModel.fromSnapshot(
@@ -58,8 +62,9 @@ class UserModel {
       email: data['Email'] ?? '',
       number: data['PhoneNumber'] ?? '',
       profilePicture: data['ProfilePicture'] ?? '',
-      isApproved: data['isApproved'],
-      plan: data['plan'],
+      isApproved: data['isApproved'] ?? false,
+      plan: data['plan'] ?? '',
+      friendList: data['FriendList'] ?? [],
     );
   }
 }

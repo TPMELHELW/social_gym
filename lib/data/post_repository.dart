@@ -7,13 +7,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PostRepository extends GetxController {
-  final _db = FirebaseFirestore.instance;
+  final _db = FirebaseFirestore.instance.collection('Posts');
 
   Future<String> postImage(String path, XFile file) async {
     try {
       final image = Supabase.instance.client;
-      final result =
-          await image.storage.from('ImagePost').upload(path, File(file.path));
+
+      await image.storage.from('ImagePost').upload(path, File(file.path));
       final url = image.storage.from('ImagePost').getPublicUrl(path);
       return url;
     } catch (e) {
@@ -21,9 +21,11 @@ class PostRepository extends GetxController {
     }
   }
 
-  Future<void> postAll(PostModel post) async {
+  Future<DocumentReference<Map<String, dynamic>>> postAll(
+      PostModel post) async {
     try {
-      await _db.collection('Posts').add(post.toJson());
+      final data = await _db.add(post.toJson());
+      return data;
     } catch (e) {
       rethrow;
     }
@@ -31,34 +33,39 @@ class PostRepository extends GetxController {
 
   DocumentSnapshot? lastDocument;
 
-  Future<List<PostModel>> getInitialPosts() async {
+  Future<QuerySnapshot> getAllPosts() async {
     try {
-      final post = await _db.collection('Posts').limit(10).get();
-      final docs = post.docs;
-      lastDocument = docs.last;
-      print(lastDocument);
-      final data = docs.map((value) => PostModel.fromSnapshot(value)).toList();
-      return data;
+      QuerySnapshot snapshot;
+      if (lastDocument == null) {
+        snapshot = await _db.limit(10).get();
+        lastDocument = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+
+        return snapshot;
+      } else {
+        snapshot = await _db.startAfterDocument(lastDocument!).limit(10).get();
+        lastDocument = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+        return snapshot;
+      }
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<List<PostModel>> fetchMoreData() async {
+  Future<void> postUpdate(id, data) async {
     try {
-      final snapshot = await _db
-          .collection('Posts')
-          .startAfterDocument(lastDocument!)
-          .limit(10)
-          .get();
-      final newDocuments = snapshot.docs;
-      lastDocument = newDocuments.last;
-      final data =
-          newDocuments.map((value) => PostModel.fromSnapshot(value)).toList();
-
-      return data;
+      await _db.doc(id).update(data);
     } catch (e) {
       rethrow;
     }
   }
+
+  Future<void> deletePost(id) async {
+    try {
+      await _db.doc(id).delete();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Future<void> addComment ()
 }
