@@ -23,6 +23,7 @@ class SharePostController extends GetxController {
   final currentUser = FirebaseAuth.instance.currentUser!.uid;
   final GlobalKey<FormState> formState = GlobalKey<FormState>();
   final box = GetStorage();
+  late final currentDataUser;
   final PostRepository postRepository = Get.put(PostRepository());
   bool isEdit = false;
 
@@ -75,7 +76,7 @@ class SharePostController extends GetxController {
         imagePath: url,
         videoPath: '',
         userId: FirebaseAuth.instance.currentUser!.uid,
-        fullName: box.read('FullName'),
+        fullName: currentDataUser.fullName,
         likes: [],
         comments: [],
       );
@@ -159,7 +160,7 @@ class SharePostController extends GetxController {
     postController.text = box.read('isEdit')
         ? _homeController.posts[_homeController.currentPost].postText
         : '';
-
+    currentDataUser = box.read('UserData');
     statusRequest = StatusRequest.init;
     super.onInit();
   }

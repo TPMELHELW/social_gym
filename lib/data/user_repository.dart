@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:either_dart/either.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gym_app/core/functions/snack_bar.dart';
 import 'package:gym_app/features/auth/model/user_model.dart';
@@ -9,7 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance.currentUser;
+  final auth = FirebaseAuth.instance.currentUser;
 
   Future<void> saveUserInf(UserModel user) async {
     try {
@@ -22,7 +23,7 @@ class UserRepository {
 
   // Future<void> addUserInf(data) async {
   //   try {
-  //     await _db.collection('Users').doc(_auth!.uid).update(data);
+  //     await _db.collection('Users').doc(auth!.uid).update(data);
   //   } catch (e) {
   //     rethrow;
   //   }
@@ -30,7 +31,7 @@ class UserRepository {
 
   Future<UserModel> getUserData() async {
     try {
-      final data = await _db.collection('Users').doc(_auth!.uid).get();
+      final data = await _db.collection('Users').doc(auth!.uid).get();
       if (data.exists) {
         return UserModel.fromSnapshot(data);
       } else {
@@ -43,7 +44,7 @@ class UserRepository {
 
   Future<void> updateUserDetails(UserModel data) async {
     try {
-      await _db.collection('Users').doc(_auth!.uid).update(data.toJson());
+      await _db.collection('Users').doc(auth!.uid).update(data.toJson());
     } catch (e) {
       throw Exception(e);
     }
@@ -51,7 +52,7 @@ class UserRepository {
 
   Future<void> updateSingleUserInf(Map<String, dynamic> data) async {
     try {
-      await _db.collection('Users').doc(_auth!.uid).update(data);
+      await _db.collection('Users').doc(auth!.uid).update(data);
     } catch (e) {
       throw Exception(e);
     }
@@ -59,7 +60,7 @@ class UserRepository {
 
   Future<void> removeUserData() async {
     try {
-      await _db.collection('Users').doc(_auth!.uid).delete();
+      await _db.collection('Users').doc(auth!.uid).delete();
     } catch (e) {
       throw Exception(e);
     }
@@ -76,12 +77,23 @@ class UserRepository {
     }
   }
 
-  Future<List<QueryDocumentSnapshot>> getAllUsersData() async {
+  Future<QuerySnapshot> getSpecialUsers(List values) async {
     try {
-      final data = await _db.collection('Users').get();
-      return data.docs;
+      QuerySnapshot querySnapshot = await _db
+          .collection('Users')
+          .where(FieldPath.documentId, whereIn: values)
+          .get();
+      return querySnapshot;
     } catch (e) {
       rethrow;
     }
   }
+  // Future<List<QueryDocumentSnapshot>> getAllUsersData() async {
+  //   try {
+  //     final data = await _db.collection('Users').get();
+  //     return data.docs;
+  //   } catch (e) {
+  //     rethrow;
+  //   }
+  // }
 }

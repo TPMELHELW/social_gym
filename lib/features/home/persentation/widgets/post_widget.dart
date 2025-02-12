@@ -64,9 +64,7 @@ class PostWidget extends StatelessWidget {
                       style: IconButton.styleFrom(
                           alignment: Alignment.centerRight),
                     )
-                  : controller.box
-                          .read('UserData')
-                          .friendList
+                  : controller.userData.friendList
                           .contains(controller.posts[index].userId)
                       ? IconButton(
                           onPressed: () => controller.removeFriend(index),

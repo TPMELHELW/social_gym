@@ -51,10 +51,11 @@ class AuthRepository extends GetxController {
     }
   }
 
-  Future<DocumentSnapshot> signInWithEmail(
+  Future<DocumentSnapshot<Map<String, dynamic>>> signInWithEmail(
       String email, String password) async {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
+      // print(_auth.currentUser!.uid);
       final db = await FirebaseFirestore.instance
           .collection('Users')
           .doc(_auth.currentUser!.uid)

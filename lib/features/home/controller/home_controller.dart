@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:either_dart/either.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
@@ -22,6 +23,7 @@ class HomeController extends GetxController {
   final GlobalKey<FormState> secondCommentFormState = GlobalKey<FormState>();
   final UserRepository userRepository = Get.put(UserRepository());
   final box = GetStorage();
+  late UserModel userData;
   late TextEditingController commentController;
   late TextEditingController secondCommentController;
   late StatusRequest statusRequest;
@@ -121,7 +123,6 @@ class HomeController extends GetxController {
   ///Add Friend
   Future<void> addFriend(index) async {
     try {
-      UserModel userData = box.read('UserData');
       userData.friendList.add(posts[index].userId);
       await userRepository.updateSingleUserInf(userData.toJson());
       update();
@@ -133,7 +134,6 @@ class HomeController extends GetxController {
   ///Remove Friend
   Future<void> removeFriend(index) async {
     try {
-      UserModel userData = box.read('UserData');
       userData.friendList.remove(posts[index].userId);
       await userRepository.updateSingleUserInf(userData.toJson());
       update();
@@ -187,9 +187,12 @@ class HomeController extends GetxController {
   void onInit() {
     commentController = TextEditingController();
     secondCommentController = TextEditingController();
-    final ss = box.read('UserData');
-    print(ss['FirstName']);
-
+    // final ss = box.read('UserData');
+    // print(ss['FirstName']);
+    print(box.read('UserData'));
+    userData = UserModel.fromStorage(box.read('UserData'));
+    // print(userData.email);
+    // print(userData.friendList);
     statusRequest = StatusRequest.init;
     scrollController.addListener(_scrollListener);
     _fetchData();

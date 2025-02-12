@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -38,14 +40,11 @@ class LoginController extends GetxController {
 
       final cred = await _authRepository.signInWithEmail(
           email.text.trim(), password.text.trim());
-
-      box.write(
-          'UserData',
-          UserModel.fromSnapshot(
-              cred as DocumentSnapshot<Map<String, dynamic>>));
-      box.write('FullName', cred['UserName']);
-      box.write('Email', cred['Email']);
-
+      // box.remove('UserData');
+      // log()
+      // print()
+      box.write('UserData', cred);
+      log(cred['FirstName']);
       statusRequest = StatusRequest.success;
       update();
       showSuccessSnackbar('Success', 'Log in Success');

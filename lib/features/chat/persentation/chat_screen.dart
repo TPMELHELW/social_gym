@@ -9,7 +9,7 @@ class ChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ChatController controller = Get.put(ChatController());
+    Get.put(ChatController());
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.only(top: 20, bottom: 100),
