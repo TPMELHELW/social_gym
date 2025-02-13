@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gym_app/core/constants/app_enum.dart';
@@ -48,7 +47,7 @@ class SignupController extends GetxController {
         isApproved: false,
         plan: '',
         friendList: [],
-        lastSeen: Timestamp(0, 0),
+        // lastSeen: Timestamp(0, 0),
       );
 
       await UserRepository().saveUserInf(userData);

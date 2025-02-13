@@ -22,8 +22,8 @@ class ChattingScreen extends StatelessWidget {
               children: [
                 Text(controller.userData[index].firstName,
                     style: const TextStyle(fontSize: 16)),
-                Text(controller.getLastSeen(index),
-                    style: const TextStyle(fontSize: 12)),
+                // Text(controller.getLastSeen(index),
+                //     style: const TextStyle(fontSize: 12)),
               ],
             ),
           ],

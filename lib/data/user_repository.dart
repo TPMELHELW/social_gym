@@ -50,9 +50,10 @@ class UserRepository {
     }
   }
 
-  Future<void> updateSingleUserInf(Map<String, dynamic> data) async {
+  Future<UserModel> updateSingleUserInf(Map<String, dynamic> data) async {
     try {
       await _db.collection('Users').doc(auth!.uid).update(data);
+      return await getUserData();
     } catch (e) {
       throw Exception(e);
     }
@@ -79,6 +80,7 @@ class UserRepository {
 
   Future<QuerySnapshot> getSpecialUsers(List values) async {
     try {
+      print(values);
       QuerySnapshot querySnapshot = await _db
           .collection('Users')
           .where(FieldPath.documentId, whereIn: values)

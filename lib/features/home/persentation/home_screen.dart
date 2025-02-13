@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:gym_app/features/home/controller/home_controller.dart';
 import 'package:gym_app/features/home/persentation/widgets/post_widget.dart';
 import 'package:gym_app/features/share_post/presentation/share_post_screen.dart';
@@ -11,13 +10,13 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(HomeController());
+    final controller = Get.put(HomeController());
     return SafeArea(
       child: Column(
         children: [
           GestureDetector(
-            onTap: () {
-              GetStorage().write('isEdit', false);
+            onTap: () async {
+              await controller.prefsService.setBool('isEdit', false);
               Get.to(() => const SharePostScreen());
             },
             child: Container(

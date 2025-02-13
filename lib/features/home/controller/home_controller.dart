@@ -1,12 +1,13 @@
+import 'dart:convert';
+import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:either_dart/either.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:gym_app/core/constants/app_enum.dart';
 import 'package:gym_app/core/functions/check_internet.dart';
 import 'package:gym_app/core/functions/snack_bar.dart';
+import 'package:gym_app/core/services/shared_preferences_services.dart';
 import 'package:gym_app/data/post_repository.dart';
 import 'package:gym_app/data/user_repository.dart';
 import 'package:gym_app/features/auth/model/user_model.dart';
@@ -22,7 +23,8 @@ class HomeController extends GetxController {
   final GlobalKey<FormState> commentFormState = GlobalKey<FormState>();
   final GlobalKey<FormState> secondCommentFormState = GlobalKey<FormState>();
   final UserRepository userRepository = Get.put(UserRepository());
-  final box = GetStorage();
+  final SharedPreferencesService prefsService =
+      Get.find<SharedPreferencesService>();
   late UserModel userData;
   late TextEditingController commentController;
   late TextEditingController secondCommentController;
@@ -87,7 +89,7 @@ class HomeController extends GetxController {
           return;
         }
         final comment = CommentModel(
-            fullName: box.read('FullName'),
+            fullName: userData.userName,
             commentText: commentController.text,
             likes: [],
             userId: currentUser,
@@ -101,7 +103,7 @@ class HomeController extends GetxController {
           return;
         }
         final comment = CommentModel(
-            fullName: box.read('FullName'),
+            fullName: userData.userName,
             commentText: secondCommentController.text,
             likes: [],
             userId: currentUser,
@@ -124,7 +126,8 @@ class HomeController extends GetxController {
   Future<void> addFriend(index) async {
     try {
       userData.friendList.add(posts[index].userId);
-      await userRepository.updateSingleUserInf(userData.toJson());
+      final data = await userRepository.updateSingleUserInf(userData.toJson());
+      await prefsService.setString('UserData', json.encode(data));
       update();
     } catch (e) {
       showErrorSnackbar('Error', e.toString());
@@ -135,7 +138,8 @@ class HomeController extends GetxController {
   Future<void> removeFriend(index) async {
     try {
       userData.friendList.remove(posts[index].userId);
-      await userRepository.updateSingleUserInf(userData.toJson());
+      final data = await userRepository.updateSingleUserInf(userData.toJson());
+      await prefsService.setString('UserData', json.encode(data));
       update();
     } catch (e) {
       showErrorSnackbar('Error', e.toString());
@@ -184,16 +188,13 @@ class HomeController extends GetxController {
   }
 
   @override
-  void onInit() {
+  void onInit() async {
+    statusRequest = StatusRequest.init;
     commentController = TextEditingController();
     secondCommentController = TextEditingController();
-    // final ss = box.read('UserData');
-    // print(ss['FirstName']);
-    print(box.read('UserData'));
-    userData = UserModel.fromStorage(box.read('UserData'));
-    // print(userData.email);
-    // print(userData.friendList);
-    statusRequest = StatusRequest.init;
+    userData = UserModel.fromStorage(
+        json.decode((await prefsService.getString('UserData'))!));
+    log(userData.friendList.toString());
     scrollController.addListener(_scrollListener);
     _fetchData();
     super.onInit();

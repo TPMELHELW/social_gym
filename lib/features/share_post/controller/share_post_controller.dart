@@ -1,13 +1,15 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:gym_app/core/constants/app_enum.dart';
 import 'package:gym_app/core/functions/check_internet.dart';
 import 'package:gym_app/core/functions/snack_bar.dart';
+import 'package:gym_app/core/services/shared_preferences_services.dart';
 import 'package:gym_app/data/post_repository.dart';
+import 'package:gym_app/features/auth/model/user_model.dart';
 import 'package:gym_app/features/home/controller/home_controller.dart';
 import 'package:gym_app/features/home/model/post_model.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -22,8 +24,9 @@ class SharePostController extends GetxController {
   final HomeController _homeController = HomeController.instance;
   final currentUser = FirebaseAuth.instance.currentUser!.uid;
   final GlobalKey<FormState> formState = GlobalKey<FormState>();
-  final box = GetStorage();
-  late final currentDataUser;
+  final SharedPreferencesService _prefsService =
+      Get.find<SharedPreferencesService>();
+  late UserModel currentDataUser;
   final PostRepository postRepository = Get.put(PostRepository());
   bool isEdit = false;
 
@@ -49,7 +52,7 @@ class SharePostController extends GetxController {
             imagePath: '',
             videoPath: '',
             userId: FirebaseAuth.instance.currentUser!.uid,
-            fullName: box.read('FullName'),
+            fullName: currentDataUser.userName,
             likes: [],
             comments: [],
             time: DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now()),
@@ -76,7 +79,7 @@ class SharePostController extends GetxController {
         imagePath: url,
         videoPath: '',
         userId: FirebaseAuth.instance.currentUser!.uid,
-        fullName: currentDataUser.fullName,
+        fullName: currentDataUser.userName,
         likes: [],
         comments: [],
       );
@@ -154,14 +157,16 @@ class SharePostController extends GetxController {
   }
 
   @override
-  void onInit() {
+  void onInit() async {
+    statusRequest = StatusRequest.init;
     imageFile = null;
     postController = TextEditingController();
-    postController.text = box.read('isEdit')
+
+    postController.text = await _prefsService.getBool('isEdit') as bool
         ? _homeController.posts[_homeController.currentPost].postText
         : '';
-    currentDataUser = box.read('UserData');
-    statusRequest = StatusRequest.init;
+    currentDataUser = UserModel.fromStorage(
+        json.decode((await _prefsService.getString('UserData'))!));
     super.onInit();
   }
 }

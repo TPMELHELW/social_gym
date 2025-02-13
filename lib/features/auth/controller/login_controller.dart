@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,7 +7,9 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:gym_app/core/constants/app_enum.dart';
 import 'package:gym_app/core/functions/check_internet.dart';
+import 'package:gym_app/core/functions/data_converter.dart';
 import 'package:gym_app/core/functions/snack_bar.dart';
+import 'package:gym_app/core/services/shared_preferences_services.dart';
 import 'package:gym_app/data/auth_repository.dart';
 import 'package:gym_app/features/auth/model/user_model.dart';
 import 'package:gym_app/features/navigation/persentation/navigation_screen.dart';
@@ -20,7 +23,8 @@ class LoginController extends GetxController {
 
   late StatusRequest statusRequest;
 
-  final box = GetStorage();
+  final SharedPreferencesService _prefsService =
+      Get.find<SharedPreferencesService>();
   final AuthRepository _authRepository = Get.put(AuthRepository());
 
   Future<void> signInWithEmail() async {
@@ -40,10 +44,8 @@ class LoginController extends GetxController {
 
       final cred = await _authRepository.signInWithEmail(
           email.text.trim(), password.text.trim());
-      // box.remove('UserData');
-      // log()
-      // print()
-      box.write('UserData', cred);
+      _prefsService.setString('UserData', json.encode(cred.data()));
+      log(await _prefsService.getString('UserData') as String);
       log(cred['FirstName']);
       statusRequest = StatusRequest.success;
       update();

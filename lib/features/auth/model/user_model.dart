@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
@@ -11,11 +13,11 @@ class UserModel {
   bool isApproved;
   String plan;
   List friendList;
-  Timestamp lastSeen;
+  // Timestamp lastSeen;
 
   UserModel(
       {required this.id,
-      required this.lastSeen,
+      // required this.lastSeen,
       required this.friendList,
       required this.firstName,
       required this.lastName,
@@ -37,7 +39,7 @@ class UserModel {
       'isApproved': isApproved,
       'Plan': plan,
       'FriendList': friendList,
-      'LastSeen': lastSeen,
+      // 'LastSeen': lastSeen,
     };
   }
 
@@ -52,7 +54,7 @@ class UserModel {
         isApproved: false,
         plan: '',
         friendList: [],
-        lastSeen: Timestamp(0, 0),
+        // lastSeen: Timestamp(0, 0),
       );
 
   factory UserModel.fromSnapshot(
@@ -69,12 +71,13 @@ class UserModel {
       isApproved: data['isApproved'] ?? false,
       plan: data['Plan'] ?? '',
       friendList: data['FriendList'] ?? [],
-      lastSeen: data['LastSeen'] ?? Timestamp(0, 0),
+      // lastSeen: data['LastSeen'] ?? Timestamp(0, 0),
     );
   }
 
   factory UserModel.fromStorage(Map<String, dynamic> document) {
     // final data = document.data()!;
+    //  document = json.decode(data!);
     return UserModel(
       id: 'document',
       firstName: document['FirstName'] ?? '',
@@ -86,7 +89,7 @@ class UserModel {
       isApproved: document['isApproved'] ?? false,
       plan: document['Plan'] ?? '',
       friendList: document['FriendList'] ?? [],
-      lastSeen: document['LastSeen'] ?? Timestamp(0, 0),
+      // lastSeen: document['LastSeen'] ?? Timestamp(0, 0),
     );
   }
 }
