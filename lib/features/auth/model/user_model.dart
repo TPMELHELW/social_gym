@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class UserModel {
   String id;
@@ -13,11 +14,11 @@ class UserModel {
   bool isApproved;
   String plan;
   List friendList;
-  // Timestamp lastSeen;
+  String lastSeen;
 
   UserModel(
       {required this.id,
-      // required this.lastSeen,
+      required this.lastSeen,
       required this.friendList,
       required this.firstName,
       required this.lastName,
@@ -39,7 +40,7 @@ class UserModel {
       'isApproved': isApproved,
       'Plan': plan,
       'FriendList': friendList,
-      // 'LastSeen': lastSeen,
+      'LastSeen': lastSeen,
     };
   }
 
@@ -54,7 +55,7 @@ class UserModel {
         isApproved: false,
         plan: '',
         friendList: [],
-        // lastSeen: Timestamp(0, 0),
+        lastSeen: '',
       );
 
   factory UserModel.fromSnapshot(
@@ -71,7 +72,7 @@ class UserModel {
       isApproved: data['isApproved'] ?? false,
       plan: data['Plan'] ?? '',
       friendList: data['FriendList'] ?? [],
-      // lastSeen: data['LastSeen'] ?? Timestamp(0, 0),
+      lastSeen: data['LastSeen'] ?? '',
     );
   }
 
@@ -79,7 +80,7 @@ class UserModel {
     // final data = document.data()!;
     //  document = json.decode(data!);
     return UserModel(
-      id: 'document',
+      id: FirebaseAuth.instance.currentUser!.uid,
       firstName: document['FirstName'] ?? '',
       lastName: document['LastName'] ?? '',
       userName: document['UserName'] ?? '',
@@ -89,7 +90,7 @@ class UserModel {
       isApproved: document['isApproved'] ?? false,
       plan: document['Plan'] ?? '',
       friendList: document['FriendList'] ?? [],
-      // lastSeen: document['LastSeen'] ?? Timestamp(0, 0),
+      lastSeen: document['LastSeen'] ?? '',
     );
   }
 }

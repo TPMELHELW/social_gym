@@ -1,13 +1,15 @@
 class MessageModel {
   final String message;
   final String id;
+  final DateTime sendAt;
 
-  MessageModel({required this.message, required this.id});
+  MessageModel({required this.message, required this.id, required this.sendAt});
 
   factory MessageModel.fromSnapshot(Map<String, dynamic> data) {
     return MessageModel(
       message: data['Message'] ?? '',
       id: data['Id'] ?? '',
+      sendAt: data['SendAt'].toDate(),
     );
   }
 
@@ -15,6 +17,7 @@ class MessageModel {
     return {
       'Message': message,
       'Id': id,
+      'SendAt': sendAt,
     };
   }
 }

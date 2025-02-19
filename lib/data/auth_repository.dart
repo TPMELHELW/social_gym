@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:gym_app/core/initial_binding.dart';
 import 'package:gym_app/features/auth/persentation/signup/persentation/verify_screen.dart';
 import 'package:gym_app/features/navigation/persentation/navigation_screen.dart';
 import 'package:gym_app/features/onboarding/welcome_screen.dart';
@@ -36,7 +37,7 @@ class AuthRepository extends GetxController {
       if (!_auth.currentUser!.emailVerified) {
         Get.offAll(() => const VerifyScreen());
       } else {
-        Get.offAll(() => const NavigationScreen());
+        Get.offAll(() => const NavigationScreen(), binding: InitialBinding());
       }
     } else {
       Get.offAll(() => const WelcomeScreen());

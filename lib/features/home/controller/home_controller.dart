@@ -128,6 +128,7 @@ class HomeController extends GetxController {
       userData.friendList.add(posts[index].userId);
       final data = await userRepository.updateSingleUserInf(userData.toJson());
       await prefsService.setString('UserData', json.encode(data));
+      // _chatController.currentUser = data;
       update();
     } catch (e) {
       showErrorSnackbar('Error', e.toString());
@@ -140,6 +141,9 @@ class HomeController extends GetxController {
       userData.friendList.remove(posts[index].userId);
       final data = await userRepository.updateSingleUserInf(userData.toJson());
       await prefsService.setString('UserData', json.encode(data));
+      // _chatController.userData
+      //     .removeWhere((item) => item.id == posts[index].userId);
+      // _chatController.currentUser = data;
       update();
     } catch (e) {
       showErrorSnackbar('Error', e.toString());

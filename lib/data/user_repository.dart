@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:either_dart/either.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gym_app/core/functions/snack_bar.dart';
 import 'package:gym_app/features/auth/model/user_model.dart';
@@ -80,7 +79,7 @@ class UserRepository {
 
   Future<QuerySnapshot> getSpecialUsers(List values) async {
     try {
-      print(values);
+      // print(values);
       QuerySnapshot querySnapshot = await _db
           .collection('Users')
           .where(FieldPath.documentId, whereIn: values)
@@ -90,6 +89,7 @@ class UserRepository {
       rethrow;
     }
   }
+
   // Future<List<QueryDocumentSnapshot>> getAllUsersData() async {
   //   try {
   //     final data = await _db.collection('Users').get();

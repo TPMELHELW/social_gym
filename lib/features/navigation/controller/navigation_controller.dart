@@ -17,23 +17,23 @@ class NavigationController extends GetxController
     TabBarModel(text: 'Settings', icon: const Icon(Iconsax.setting))
   ];
 
-  // final UserRepository userRepository = UserRepository();
+  final UserRepository userRepository = UserRepository();
 
-  // Future<void> setLastSeen() async {
-  //   try {
-  //     DateTime now = DateTime.now();
-  //     Map<String, dynamic> time = {'LastSeen': now};
-  //     await userRepository.updateSingleUserInf(time);
-  //     // print(user)
-  //     // print(now);
-  //   } catch (e) {
-  //     // print(e);
-  //   }
-  // }
+  Future<void> setLastSeen() async {
+    try {
+      DateTime now = DateTime.now();
+      Map<String, dynamic> time = {'LastSeen': now.toString()};
+      await userRepository.updateSingleUserInf(time);
+      // print(user)
+      print(now);
+    } catch (e) {
+      print(e);
+    }
+  }
 
   @override
   void onInit() {
-    // setLastSeen();
+    setLastSeen();
     tabController = TabController(length: 4, vsync: this);
     super.onInit();
   }

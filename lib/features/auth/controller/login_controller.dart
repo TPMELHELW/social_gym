@@ -9,6 +9,7 @@ import 'package:gym_app/core/constants/app_enum.dart';
 import 'package:gym_app/core/functions/check_internet.dart';
 import 'package:gym_app/core/functions/data_converter.dart';
 import 'package:gym_app/core/functions/snack_bar.dart';
+import 'package:gym_app/core/initial_binding.dart';
 import 'package:gym_app/core/services/shared_preferences_services.dart';
 import 'package:gym_app/data/auth_repository.dart';
 import 'package:gym_app/features/auth/model/user_model.dart';
@@ -50,7 +51,7 @@ class LoginController extends GetxController {
       statusRequest = StatusRequest.success;
       update();
       showSuccessSnackbar('Success', 'Log in Success');
-      Get.offAll(const NavigationScreen());
+      Get.offAll(const NavigationScreen(), binding: InitialBinding());
     } catch (e) {
       showErrorSnackbar('Failed', e.toString());
       statusRequest = StatusRequest.serverFailure;

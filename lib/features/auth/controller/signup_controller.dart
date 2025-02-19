@@ -47,7 +47,7 @@ class SignupController extends GetxController {
         isApproved: false,
         plan: '',
         friendList: [],
-        // lastSeen: Timestamp(0, 0),
+        lastSeen: '',
       );
 
       await UserRepository().saveUserInf(userData);
