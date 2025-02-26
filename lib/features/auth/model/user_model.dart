@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -16,18 +14,19 @@ class UserModel {
   List friendList;
   String lastSeen;
 
-  UserModel(
-      {required this.id,
-      required this.lastSeen,
-      required this.friendList,
-      required this.firstName,
-      required this.lastName,
-      required this.userName,
-      required this.email,
-      required this.number,
-      required this.profilePicture,
-      required this.isApproved,
-      required this.plan});
+  UserModel({
+    required this.id,
+    required this.lastSeen,
+    required this.friendList,
+    required this.firstName,
+    required this.lastName,
+    required this.userName,
+    required this.email,
+    required this.number,
+    required this.profilePicture,
+    required this.isApproved,
+    required this.plan,
+  });
 
   Map<String, dynamic> toJson() {
     return {
@@ -77,8 +76,6 @@ class UserModel {
   }
 
   factory UserModel.fromStorage(Map<String, dynamic> document) {
-    // final data = document.data()!;
-    //  document = json.decode(data!);
     return UserModel(
       id: FirebaseAuth.instance.currentUser!.uid,
       firstName: document['FirstName'] ?? '',
@@ -91,6 +88,35 @@ class UserModel {
       plan: document['Plan'] ?? '',
       friendList: document['FriendList'] ?? [],
       lastSeen: document['LastSeen'] ?? '',
+    );
+  }
+
+  // Add the copyWith method
+  UserModel copyWith({
+    String? id,
+    String? firstName,
+    String? lastName,
+    String? userName,
+    String? email,
+    String? number,
+    String? profilePicture,
+    bool? isApproved,
+    String? plan,
+    List? friendList,
+    String? lastSeen,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      userName: userName ?? this.userName,
+      email: email ?? this.email,
+      number: number ?? this.number,
+      profilePicture: profilePicture ?? this.profilePicture,
+      isApproved: isApproved ?? this.isApproved,
+      plan: plan ?? this.plan,
+      friendList: friendList ?? this.friendList,
+      lastSeen: lastSeen ?? this.lastSeen,
     );
   }
 }

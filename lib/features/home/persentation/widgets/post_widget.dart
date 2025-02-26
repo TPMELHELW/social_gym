@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gym_app/features/auth/model/user_model.dart';
 import 'package:gym_app/features/home/controller/home_controller.dart';
 import 'package:gym_app/features/home/persentation/widgets/comment_section.dart';
 import 'package:gym_app/features/home/persentation/widgets/post_options.dart';
@@ -54,24 +55,43 @@ class PostWidget extends StatelessWidget {
                 ],
               ),
               const Spacer(),
-              controller.currentUser == controller.posts[index].userId
-                  ? IconButton(
-                      onPressed: () {
-                        controller.currentPost = index;
-                        postOptions(context, controller);
-                      },
-                      icon: const Icon(Iconsax.more),
-                      style: IconButton.styleFrom(
-                          alignment: Alignment.centerRight),
-                    )
-                  : controller.userData.friendList
-                          .contains(controller.posts[index].userId)
-                      ? IconButton(
-                          onPressed: () => controller.removeFriend(index),
-                          icon: const Icon(Iconsax.profile_remove))
-                      : IconButton(
-                          onPressed: () => controller.addFriend(index),
-                          icon: const Icon(Iconsax.profile_add)),
+              FutureBuilder<UserModel>(
+                  future: controller.getUserData(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+
+                    if (!snapshot.hasData) {
+                      return const Center(
+                          child: Text('Start Chat with some freinds'));
+                    }
+
+                    final data = snapshot.data!;
+                    return controller.currentUser ==
+                            controller.posts[index].userId
+                        ? IconButton(
+                            onPressed: () {
+                              controller.currentPost = index;
+                              postOptions(context, controller);
+                            },
+                            icon: const Icon(Iconsax.more),
+                            style: IconButton.styleFrom(
+                                alignment: Alignment.centerRight),
+                          )
+                        : data.friendList
+                                .contains(controller.posts[index].userId)
+                            ? IconButton(
+                                onPressed: () => controller.removeFriend(index),
+                                icon: const Icon(Iconsax.profile_remove))
+                            : IconButton(
+                                onPressed: () => controller.addFriend(index),
+                                icon: const Icon(Iconsax.profile_add));
+                  })
             ],
           ),
           const SizedBox(

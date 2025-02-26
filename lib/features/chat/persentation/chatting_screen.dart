@@ -1,112 +1,79 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:gym_app/features/chat/controller/chat_controller.dart';
-import 'package:iconsax/iconsax.dart';
+import 'package:gym_app/features/chat/model/message_model.dart';
+import 'package:gym_app/features/chat/persentation/widgets/chat_screen_appbar.dart';
+import 'package:gym_app/features/chat/persentation/widgets/message_widget.dart';
+import 'package:gym_app/features/chat/persentation/widgets/repalied_message_widget.dart';
+import 'package:gym_app/features/chat/persentation/widgets/send_message_widget.dart';
 
 class ChattingScreen extends StatelessWidget {
   final int index;
-  const ChattingScreen({super.key, required this.index});
+  final bool isChated;
+  // final  userId;
+  const ChattingScreen({
+    super.key,
+    required this.index,
+    required this.isChated,
+    // required this.userId,
+  });
 
   @override
   Widget build(BuildContext context) {
     final ChatController controller = ChatController.instance;
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const CircleAvatar(
-              radius: 17,
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(controller.friendData[index].firstName,
-                    style: const TextStyle(fontSize: 16)),
-                Text(controller.getLastSeen(index),
-                    style: const TextStyle(fontSize: 12)),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Iconsax.more),
-            onPressed: () {},
-          ),
-        ],
-        leading: IconButton(
-          icon: const Icon(Iconsax.backward),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
+      appBar: ChatScreenAppbar(
+        isChated: isChated,
+        index: index,
       ),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          const SizedBox(
-            height: 20,
-          ),
-          GetBuilder<ChatController>(
-              init: ChatController.instance,
-              builder: (controller) {
-                return Expanded(
-                  child: ListView.builder(
-                      controller: controller.scrollController,
-                      // keyboardDismissBehavior:
-                      //     ScrollViewKeyboardDismissBehavior.onDrag,
-                      shrinkWrap: true,
-                      itemCount: controller.chats.length,
-                      itemBuilder: (context, index) {
-                        // print(controller.chats[index].message);
-                        return GestureDetector(
-                          onHorizontalDragEnd: (detail) {
-                            print('dd');
-                          },
-                          child: Column(
-                            crossAxisAlignment: controller.chats[index].id ==
-                                    controller.userRepository.auth!.uid
-                                ? CrossAxisAlignment.end
-                                : CrossAxisAlignment.start,
-                            children: [
-                              Material(
-                                borderRadius: BorderRadius.circular(50),
-                                elevation: 10,
-                                color: Theme.of(context).colorScheme.tertiary,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(controller.chats[index].message),
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                );
-              }),
-          BottomAppBar(
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller.messageController,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15)),
-                      hintText: 'Type a message',
-                    ),
+          const SizedBox(height: 20),
+          StreamBuilder<List<MessageModel>>(
+            stream: controller.getChats(index, isChated),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    backgroundColor: Colors.white,
                   ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text('No chats available.'));
+              }
+
+              final data = snapshot.data!;
+              return Expanded(
+                child: ListView.builder(
+                  controller: controller.scrollController,
+                  shrinkWrap: true,
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    final message = data[index];
+                    final isMe =
+                        message.id == controller.userRepository.auth!.uid;
+
+                    return MessageWidget(
+                      isMe: isMe,
+                      message: message,
+                    );
+                  },
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: () async => await controller.sendMessage(index),
-                ),
-              ],
-            ),
+              );
+            },
           ),
+          const RepaliedMessageWidget(),
+          SendMessageWidget(
+            index: index,
+            isChated: isChated,
+          )
         ],
       ),
     );

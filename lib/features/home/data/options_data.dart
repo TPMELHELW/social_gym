@@ -22,3 +22,18 @@ List<OptionsModel> optionsData = [
       prefixIcon: const Icon(Iconsax.box_remove),
       onPress: () => controller.deletePost()),
 ];
+
+// final ChatController _chatController = ChatController.instance;
+
+// List<OptionsModel> chatsOptionsData = [
+//   OptionsModel(
+//     title: 'Delete Chat',
+//     prefixIcon: const Icon(Iconsax.box_remove),
+//     onPress: () => _chatController.deleteChats(),
+//   ),
+//   OptionsModel(
+//     title: 'Unfriend',
+//     prefixIcon: const Icon(Iconsax.profile_remove),
+//     onPress: () {},
+//   ),
+// ];

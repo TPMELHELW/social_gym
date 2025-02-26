@@ -1,24 +1,25 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gym_app/features/auth/model/user_model.dart';
 import 'package:gym_app/features/chat/controller/chat_controller.dart';
 import 'package:gym_app/features/chat/model/chat_model.dart';
 import 'package:gym_app/features/chat/persentation/chatting_screen.dart';
+import 'package:iconsax/iconsax.dart';
 
 class VerticalChats extends StatelessWidget {
   const VerticalChats({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder(
+    return GetBuilder<ChatController>(
         init: ChatController.instance,
         builder: (controller) {
-          return StreamBuilder<List<ChatModel>>(
-              stream: controller.getMessagedFreind(),
+          return FutureBuilder<List<ChatModel>>(
+              future: controller.getMessagedFreind(),
               builder: (context, snapshot) {
-                print('fff');
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 if (snapshot.hasError) {
@@ -26,21 +27,20 @@ class VerticalChats extends StatelessWidget {
                 }
 
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('No chats available.'));
+                  return const Center(
+                      child: Text('Start Chat with some freinds'));
                 }
-
-                final chats = snapshot.data!.toSet().toList();
-                // print(chats[0].);
+                final chats = snapshot.data!;
                 return ListView.builder(
                   itemCount: chats.length,
                   shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
+                    log(chats[index].lastMessage.message);
                     return GestureDetector(
-                      onTap: () async {
-                        await controller.getChats(index, true);
+                      onTap: () {
                         Get.to(() => ChattingScreen(
                               index: index,
+                              isChated: true,
                             ));
                       },
                       child: Container(
@@ -62,19 +62,53 @@ class VerticalChats extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  controller.chatedUserData[index].userName,
+                                  chats[index].userName,
                                   textAlign: TextAlign.left,
                                 ),
                                 Text(
-                                  controller.chatedUserData[index].lastMessage
-                                      .message,
+                                  chats[index].lastMessage.message,
                                   style: TextStyle(
                                     color:
                                         Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                               ],
-                            )
+                            ),
+                            const Spacer(),
+                            IconButton(
+                                onPressed: () {
+                                  Get.bottomSheet(
+                                    Container(
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(15),
+                                            topRight: Radius.circular(15),
+                                          ),
+                                        ),
+                                        child: Wrap(
+                                          children: [
+                                            ListTile(
+                                              title: Text('Delete Chat'),
+                                              trailing:
+                                                  Icon(Iconsax.box_remove),
+                                              onTap: () => controller
+                                                  .deleteChats(index, true),
+                                            ),
+                                            ListTile(
+                                              title: Text('Unfriend'),
+                                              trailing:
+                                                  Icon(Iconsax.profile_remove),
+                                              onTap: () => controller.unfriend(
+                                                  index, true),
+                                            ),
+                                          ],
+                                        )),
+                                  );
+                                },
+                                icon: const Icon(Iconsax.more))
                           ],
                         ),
                       ),

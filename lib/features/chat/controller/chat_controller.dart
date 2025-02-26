@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:gym_app/core/functions/snack_bar.dart';
@@ -10,6 +9,7 @@ import 'package:gym_app/data/user_repository.dart';
 import 'package:gym_app/features/auth/model/user_model.dart';
 import 'package:gym_app/features/chat/model/chat_model.dart';
 import 'package:gym_app/features/chat/model/message_model.dart';
+import 'package:gym_app/features/home/controller/home_controller.dart';
 import 'package:intl/intl.dart';
 
 class ChatController extends GetxController {
@@ -21,14 +21,27 @@ class ChatController extends GetxController {
   late UserModel currentUser;
   final SharedPreferencesService shardPref =
       Get.find<SharedPreferencesService>();
+  MessageModel? repliedMessage;
   List<ChatModel> chatedUserData = [];
   ScrollController scrollController = ScrollController();
   List<UserModel> friendData = [];
   List<MessageModel> chats = [];
+  // final HomeController _homeController = Get.put(HomeController());
+
+  void onSlide(MessageModel message) {
+    repliedMessage = message;
+    update();
+  }
+
+  void clearReply() {
+    repliedMessage = null;
+    update();
+  }
 
   ///Get Freind List Fun
   Future<void> fetchDocuments() async {
     try {
+      friendData.clear();
       if (currentUser.friendList.isEmpty) {
         return;
       }
@@ -45,27 +58,43 @@ class ChatController extends GetxController {
   }
 
   ///Get Messaged Friend
-  Stream<List<ChatModel>> getMessagedFreind() {
-    return chatRepository
-        .getMessagedFreind(currentUser.id)
-        .asyncMap((snapshot) async {
-      final chats = snapshot.docs;
-      for (var chat in chats) {
+  Future<List<ChatModel>> getMessagedFreind() async {
+    try {
+      final snapshot = await chatRepository.getMessagedFreind(currentUser.id);
+      final chats = <ChatModel>[];
+      for (var chat in snapshot.docs) {
         final usersId = chat['UsersId'] as List<dynamic>;
-        final otherUserId = usersId.firstWhere((item) => item != currentUser.id,
-            orElse: () => null);
+        final otherUserId = usersId.firstWhere(
+          (item) => item != currentUser.id,
+          orElse: () => null,
+        );
 
-        final fitered = friendData.where((item) => item.id == otherUserId);
-        final data = ChatModel.fromSnapshot({
-          'UserName': fitered.single.userName,
-          'LastMessage': MessageModel.fromSnapshot(chat['LastMessage'])
-        }, chat.id);
-        chatedUserData.where((item) => item.chatId == data.chatId).isNotEmpty
-            ? null
-            : chatedUserData.add(data);
+        if (otherUserId != null) {
+          final filtered = chat['UsersDetails']
+              .where((item) => item['UserId'] == otherUserId);
+          if (filtered.isNotEmpty) {
+            final friend = filtered.first;
+            final chatModel = ChatModel.fromSnapshot(
+              {
+                'UserName': friend['UserName'],
+                'UsersId': chat['UsersId'],
+                'LastMessage': MessageModel.fromMap(chat['LastMessage']),
+              },
+              chat.id,
+            );
+            chats.add(chatModel);
+          }
+        }
       }
-      return chatedUserData;
-    });
+
+      chatedUserData =
+          chats; // Assuming chatedUserData is a class-level variable
+      return chats;
+    } catch (e) {
+      // Handle any errors that occur during the process
+      print("Error fetching messaged friends: $e");
+      rethrow; // Or return an empty list: return [];
+    }
   }
 
   ///Last Seen Fun
@@ -85,6 +114,7 @@ class ChatController extends GetxController {
     }
   }
 
+  ///Scrollling down Fun
   void _scrollToBottom() {
     scrollController.animateTo(
       scrollController.position.maxScrollExtent,
@@ -94,65 +124,62 @@ class ChatController extends GetxController {
   }
 
   ///Get Messages Fun
-  Future<void> getChats(int index, bool isChated) async {
-    try {
-      print(currentUser.id);
-      print(currentUser.userName);
-
-      // final data = await chatRepository.getMessages(
-      //   [
-      //     {
-      //       'Id': FirebaseAuth.instance.currentUser!.uid,
-      //       'UserName': currentUser.userName
-      //     },
-      //     {
-      //       'Id': isChated ? chatedUserData[index].id : friendData[index].id,
-      //       'UserName': isChated
-      //           ? chatedUserData[index].userName
-      //           : friendData[index].userName,
-      //     },
-      //   ],
-      // );
-      // final List gg = data.docs[0]['Messages'];
-      // final List<MessageModel> mm =
-      //     gg.map((value) => MessageModel.fromSnapshot(value)).toList();
-
-      // chats = mm;
-    } catch (e) {
-      showErrorSnackbar('Error', e.toString());
-    }
+  Stream<List<MessageModel>> getChats(int index, bool isChated) {
+    final List<String> users = [
+      currentUser.id,
+      isChated
+          ? chatedUserData[index]
+              .usersId
+              .firstWhere((item) => item != currentUser.id)
+          : friendData[index].id
+    ];
+    users.sort();
+    final String chatId = users.join('-');
+    return chatRepository.getMessages(chatId).map((snapshot) {
+      final data = snapshot.docs.map((doc) {
+        return MessageModel.fromSnapshot(
+            doc as QueryDocumentSnapshot<Map<String, dynamic>>);
+      }).toList();
+      chats = data;
+      return data;
+    });
   }
 
   ///Send Message Fun
-  Future<void> sendMessage(int index) async {
+  Future<void> sendMessage(int index, bool isChated) async {
     try {
-      final List<String> users = [currentUser.id, friendData[index].id];
-      users.sort();
-      final String chatId = users.join('-');
-
+      final List<String> users = [
+        currentUser.id,
+        isChated
+            ? chatedUserData[index]
+                .usersId
+                .firstWhere((item) => item != currentUser.id)
+            : friendData[index].id
+      ];
       final MessageModel message = MessageModel(
           message: messageController.text,
           id: currentUser.id,
-          sendAt: DateTime.now());
+          sendAt: DateTime.now(),
+          repliedMessage: repliedMessage);
       final ChatModel chat = ChatModel(
         lastMessage: message,
         usersId: users,
       );
-      await chatRepository.createNewChat(chat.toJson(), chatId);
+      final ChatModel chat1 = ChatModel(
+        lastMessage: message,
+        usersId: users,
+        usersDetails: [
+          {'UserId': users[0], 'UserName': currentUser.userName},
+          {'UserId': users[1], 'UserName': friendData[index].userName}
+        ],
+      );
+      users.sort();
+      final String chatId = users.join('-');
+
       if (chats.isEmpty) {
+        await chatRepository.createNewChat(chat1.toJson(), chatId);
         await chatRepository.sendFirstMessage(chatId, message.toJson());
 
-        // chatedUserData.add(ChatedFriendsModel(
-        //   id: friendData[index].id,
-        //   userName: friendData[index].userName,
-        //   lastMessage: MessageModel(
-        //     message: messageController.text,
-        //     id: FirebaseAuth.instance.currentUser!.uid,
-        //   ),
-        // ));
-        // chats.add(MessageModel(
-        //     message: messageController.text,
-        //     id: FirebaseAuth.instance.currentUser!.uid));
         messageController.clear();
         _scrollToBottom();
         update();
@@ -160,20 +187,55 @@ class ChatController extends GetxController {
       }
 
       await chatRepository.sendMessages(
-          message.toJson(), chat.toJson(), chatId);
-      // chats.add(MessageModel(
-      //     message: messageController.text,
-      //     id: FirebaseAuth.instance.currentUser!.uid));
-      // chatedUserData
-      //     .where((item) => item.id == friendData[index].id)
-      //     .single
-      //     .lastMessage = MessageModel(
-      //   message: messageController.text,
-      //   id: FirebaseAuth.instance.currentUser!.uid,
-      // );
+          message.toJson(), chatId, chat.lastMessage.toJson());
       messageController.clear();
       _scrollToBottom();
+      clearReply();
 
+      update();
+    } catch (e) {
+      showErrorSnackbar('Error', e.toString());
+    }
+  }
+
+  ///Delete Chat
+  Future<void> deleteChats(int index, bool isChated) async {
+    try {
+      final List<String> users = [
+        currentUser.id,
+        isChated
+            ? chatedUserData[index]
+                .usersId
+                .firstWhere((item) => item != currentUser.id)
+            : friendData[index].id
+      ];
+      users.sort();
+      final String chatId = users.join('-');
+      await chatRepository.deleteChat(chatId);
+      Get.back();
+      update();
+    } catch (e) {
+      showErrorSnackbar('Error', e.toString());
+    }
+  }
+
+  ///Unfriend Fun
+  Future<void> unfriend(int index, bool isChated) async {
+    try {
+      final filtered = isChated
+          ? chatedUserData[index]
+              .usersId
+              .firstWhere((item) => item != currentUser.id)
+          : friendData[index].id;
+      currentUser.friendList.remove(filtered);
+
+      await userRepository
+          .updateSingleUserInf({'FriendList': currentUser.friendList});
+      shardPref.setString('UserData', json.encode(currentUser.toJson()));
+      friendData.removeWhere((item) => item.id == filtered);
+      Get.back();
+      // _homeController.userData = currentUser;
+      // _homeController.update();
       update();
     } catch (e) {
       showErrorSnackbar('Error', e.toString());

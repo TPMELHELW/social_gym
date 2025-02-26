@@ -25,43 +25,65 @@ class ChatRepository extends GetxController {
     }
   }
 
-  Future<void> sendMessages(Map<String, dynamic> lastMessage,
-      Map<String, dynamic> chats, String chatId) async {
+  Future<void> sendMessages(Map<String, dynamic> chats, String chatId,
+      Map<String, dynamic> lastMessage) async {
     try {
-      await _db
-          .collection('Chats')
-          .doc(chatId)
-          .update({'LastMessage': lastMessage});
       await _db
           .collection('Chats')
           .doc(chatId)
           .collection('Messages')
           .add(chats);
+      await _db
+          .collection('Chats')
+          .doc(chatId)
+          .update({'LastMessage': lastMessage});
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<QuerySnapshot> getMessages(List<Map<String, dynamic>> values) async {
+  Future<void> deleteChat(String chatId) async {
+    try {
+      final messages = await _db
+          .collection('Chats')
+          .doc(chatId)
+          .collection('Messages')
+          .get();
+      for (final message in messages.docs) {
+        await message.reference.delete();
+      }
+
+      await _db.collection('Chats').doc(chatId).delete();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Stream<QuerySnapshot> getMessages(String chatId) {
+    try {
+      print(chatId);
+      final data = _db
+          .collection('Chats')
+          .doc(chatId)
+          .collection('Messages')
+          .orderBy('SendAt', descending: false)
+          .snapshots();
+      // print(data)
+      data.forEach((item) => print(item.docs.length));
+      return data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<QuerySnapshot> getMessagedFreind(String id) async {
     try {
       QuerySnapshot querySnapshot = await _db
           .collection('Chats')
-          .where('Id', arrayContains: values)
-          .get();
-      return querySnapshot;
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  Stream<QuerySnapshot> getMessagedFreind(String id) {
-    try {
-      Stream<QuerySnapshot> querySnapshot = _db
-          .collection('Chats')
           .where('UsersId', arrayContains: id)
           .orderBy('LastMessage.SendAt', descending: true)
-          .snapshots();
-      print(querySnapshot.first.toString());
+          .get();
+      // print(querySnapshot.forEach((item) => print(item.docs.length)));
       return querySnapshot;
     } catch (e) {
       rethrow;

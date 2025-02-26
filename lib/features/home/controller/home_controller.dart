@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
@@ -11,6 +10,7 @@ import 'package:gym_app/core/services/shared_preferences_services.dart';
 import 'package:gym_app/data/post_repository.dart';
 import 'package:gym_app/data/user_repository.dart';
 import 'package:gym_app/features/auth/model/user_model.dart';
+import 'package:gym_app/features/chat/controller/chat_controller.dart';
 import 'package:gym_app/features/home/model/comment_model.dart';
 import 'package:gym_app/features/home/model/post_model.dart';
 
@@ -18,6 +18,7 @@ class HomeController extends GetxController {
   ///Veriable
   static HomeController get instance => Get.find<HomeController>();
   final ScrollController scrollController = ScrollController();
+  final ChatController _chatController = ChatController.instance;
   final currentUser = FirebaseAuth.instance.currentUser!.uid;
   final PostRepository postRepository = Get.put(PostRepository());
   final GlobalKey<FormState> commentFormState = GlobalKey<FormState>();
@@ -35,6 +36,12 @@ class HomeController extends GetxController {
   int? activeCommentIndex;
   int commentNumber = 0;
   int currentPost = 0;
+
+  ///CurrentUser Data
+  Future<UserModel> getUserData() async {
+    return UserModel.fromStorage(
+        json.decode((await prefsService.getString('UserData'))!));
+  }
 
   ///Delete Post
   Future<void> deletePost() async {
@@ -128,7 +135,8 @@ class HomeController extends GetxController {
       userData.friendList.add(posts[index].userId);
       final data = await userRepository.updateSingleUserInf(userData.toJson());
       await prefsService.setString('UserData', json.encode(data));
-      // _chatController.currentUser = data;
+      _chatController.currentUser = data;
+      await _chatController.fetchDocuments();
       update();
     } catch (e) {
       showErrorSnackbar('Error', e.toString());
@@ -141,9 +149,9 @@ class HomeController extends GetxController {
       userData.friendList.remove(posts[index].userId);
       final data = await userRepository.updateSingleUserInf(userData.toJson());
       await prefsService.setString('UserData', json.encode(data));
-      // _chatController.userData
-      //     .removeWhere((item) => item.id == posts[index].userId);
-      // _chatController.currentUser = data;
+      _chatController.currentUser = data;
+      await _chatController.fetchDocuments();
+
       update();
     } catch (e) {
       showErrorSnackbar('Error', e.toString());
@@ -198,7 +206,7 @@ class HomeController extends GetxController {
     secondCommentController = TextEditingController();
     userData = UserModel.fromStorage(
         json.decode((await prefsService.getString('UserData'))!));
-    log(userData.friendList.toString());
+    // log(userData.friendList.toString());
     scrollController.addListener(_scrollListener);
     _fetchData();
     super.onInit();

@@ -15,7 +15,6 @@ class UserRepository {
     try {
       await _db.collection('Users').doc(user.id).set(user.toJson());
     } catch (e) {
-      print(e);
       showErrorSnackbar('Error', e.toString());
     }
   }
@@ -79,7 +78,6 @@ class UserRepository {
 
   Future<QuerySnapshot> getSpecialUsers(List values) async {
     try {
-      // print(values);
       QuerySnapshot querySnapshot = await _db
           .collection('Users')
           .where(FieldPath.documentId, whereIn: values)

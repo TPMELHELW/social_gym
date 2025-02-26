@@ -22,10 +22,10 @@ class CircularChats extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 5),
                   child: GestureDetector(
-                    onTap: () async {
-                      await controller.getChats(index, false);
+                    onTap: () {
                       Get.to(ChattingScreen(
                         index: index,
+                        isChated: false,
                       ));
                     },
                     child: Column(
