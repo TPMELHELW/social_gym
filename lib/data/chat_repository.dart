@@ -28,11 +28,7 @@ class ChatRepository extends GetxController {
   Future<void> sendMessages(Map<String, dynamic> chats, String chatId,
       Map<String, dynamic> lastMessage) async {
     try {
-      await _db
-          .collection('Chats')
-          .doc(chatId)
-          .collection('Messages')
-          .add(chats);
+      await sendFirstMessage(chatId, chats);
       await _db
           .collection('Chats')
           .doc(chatId)
@@ -61,15 +57,12 @@ class ChatRepository extends GetxController {
 
   Stream<QuerySnapshot> getMessages(String chatId) {
     try {
-      print(chatId);
       final data = _db
           .collection('Chats')
           .doc(chatId)
           .collection('Messages')
           .orderBy('SendAt', descending: false)
           .snapshots();
-      // print(data)
-      data.forEach((item) => print(item.docs.length));
       return data;
     } catch (e) {
       rethrow;

@@ -76,13 +76,13 @@ class UserRepository {
     }
   }
 
-  Future<QuerySnapshot> getSpecialUsers(List values) async {
+  Future<List<QueryDocumentSnapshot>> getSpecialUsers(List values) async {
     try {
       QuerySnapshot querySnapshot = await _db
           .collection('Users')
           .where(FieldPath.documentId, whereIn: values)
           .get();
-      return querySnapshot;
+      return querySnapshot.docs;
     } catch (e) {
       rethrow;
     }

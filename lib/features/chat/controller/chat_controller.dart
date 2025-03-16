@@ -9,7 +9,6 @@ import 'package:gym_app/data/user_repository.dart';
 import 'package:gym_app/features/auth/model/user_model.dart';
 import 'package:gym_app/features/chat/model/chat_model.dart';
 import 'package:gym_app/features/chat/model/message_model.dart';
-import 'package:gym_app/features/home/controller/home_controller.dart';
 import 'package:intl/intl.dart';
 
 class ChatController extends GetxController {
@@ -26,7 +25,6 @@ class ChatController extends GetxController {
   ScrollController scrollController = ScrollController();
   List<UserModel> friendData = [];
   List<MessageModel> chats = [];
-  // final HomeController _homeController = Get.put(HomeController());
 
   void onSlide(MessageModel message) {
     repliedMessage = message;
@@ -45,9 +43,9 @@ class ChatController extends GetxController {
       if (currentUser.friendList.isEmpty) {
         return;
       }
-      final QuerySnapshot querySnapshot =
+      final List<QueryDocumentSnapshot> querySnapshot =
           await userRepository.getSpecialUsers(currentUser.friendList);
-      for (var doc in querySnapshot.docs) {
+      for (var doc in querySnapshot) {
         friendData.add(UserModel.fromSnapshot(
             doc as DocumentSnapshot<Map<String, dynamic>>));
       }
@@ -63,37 +61,27 @@ class ChatController extends GetxController {
       final snapshot = await chatRepository.getMessagedFreind(currentUser.id);
       final chats = <ChatModel>[];
       for (var chat in snapshot.docs) {
-        final usersId = chat['UsersId'] as List<dynamic>;
-        final otherUserId = usersId.firstWhere(
-          (item) => item != currentUser.id,
-          orElse: () => null,
-        );
-
-        if (otherUserId != null) {
-          final filtered = chat['UsersDetails']
-              .where((item) => item['UserId'] == otherUserId);
-          if (filtered.isNotEmpty) {
-            final friend = filtered.first;
-            final chatModel = ChatModel.fromSnapshot(
-              {
-                'UserName': friend['UserName'],
-                'UsersId': chat['UsersId'],
-                'LastMessage': MessageModel.fromMap(chat['LastMessage']),
-              },
-              chat.id,
-            );
-            chats.add(chatModel);
-          }
+        final filtered = chat['UsersDetails']
+            .where((item) => item['UserId'] != currentUser.id);
+        if (filtered.isNotEmpty) {
+          final friend = filtered.first;
+          final chatModel = ChatModel.fromSnapshot(
+            {
+              'UserName': friend['UserName'],
+              'UsersId': chat['UsersId'],
+              'LastMessage': MessageModel.fromMap(chat['LastMessage']),
+            },
+            chat.id,
+          );
+          chats.add(chatModel);
         }
       }
 
-      chatedUserData =
-          chats; // Assuming chatedUserData is a class-level variable
+      chatedUserData = chats;
       return chats;
     } catch (e) {
-      // Handle any errors that occur during the process
       print("Error fetching messaged friends: $e");
-      rethrow; // Or return an empty list: return [];
+      rethrow;
     }
   }
 
@@ -148,6 +136,7 @@ class ChatController extends GetxController {
   ///Send Message Fun
   Future<void> sendMessage(int index, bool isChated) async {
     try {
+      //Edit User Id
       final List<String> users = [
         currentUser.id,
         isChated
@@ -161,11 +150,8 @@ class ChatController extends GetxController {
           id: currentUser.id,
           sendAt: DateTime.now(),
           repliedMessage: repliedMessage);
+
       final ChatModel chat = ChatModel(
-        lastMessage: message,
-        usersId: users,
-      );
-      final ChatModel chat1 = ChatModel(
         lastMessage: message,
         usersId: users,
         usersDetails: [
@@ -177,7 +163,7 @@ class ChatController extends GetxController {
       final String chatId = users.join('-');
 
       if (chats.isEmpty) {
-        await chatRepository.createNewChat(chat1.toJson(), chatId);
+        await chatRepository.createNewChat(chat.toJson(), chatId);
         await chatRepository.sendFirstMessage(chatId, message.toJson());
 
         messageController.clear();
@@ -234,8 +220,6 @@ class ChatController extends GetxController {
       shardPref.setString('UserData', json.encode(currentUser.toJson()));
       friendData.removeWhere((item) => item.id == filtered);
       Get.back();
-      // _homeController.userData = currentUser;
-      // _homeController.update();
       update();
     } catch (e) {
       showErrorSnackbar('Error', e.toString());
