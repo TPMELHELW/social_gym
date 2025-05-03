@@ -53,4 +53,6 @@
   <img src="assets/screenshots/3.jpg" width="200" alt="Social Feed">
   <img src="assets/screenshots/4.jpg" width="200" alt="Messenger">
   <img src="assets/screenshots/5.jpg" width="200" alt="Subscription Plans">
+  <img src="assets/screenshots/6.jpg" width="200" alt="Account Screen">
+  
 </div>
