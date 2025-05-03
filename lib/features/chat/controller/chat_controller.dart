@@ -133,55 +133,61 @@ class ChatController extends GetxController {
     });
   }
 
-  ///Send Message Fun
   Future<void> sendMessage(int index, bool isChated) async {
     try {
-      //Edit User Id
-      final List<String> users = [
-        currentUser.id,
-        isChated
-            ? chatedUserData[index]
-                .usersId
-                .firstWhere((item) => item != currentUser.id)
-            : friendData[index].id
-      ];
-      final MessageModel message = MessageModel(
-          message: messageController.text,
-          id: currentUser.id,
-          sendAt: DateTime.now(),
-          repliedMessage: repliedMessage);
-
-      final ChatModel chat = ChatModel(
-        lastMessage: message,
-        usersId: users,
-        usersDetails: [
-          {'UserId': users[0], 'UserName': currentUser.userName},
-          {'UserId': users[1], 'UserName': friendData[index].userName}
-        ],
-      );
-      users.sort();
-      final String chatId = users.join('-');
+      final messageData = await _prepareMessageData(index, isChated);
 
       if (chats.isEmpty) {
-        await chatRepository.createNewChat(chat.toJson(), chatId);
-        await chatRepository.sendFirstMessage(chatId, message.toJson());
-
-        messageController.clear();
-        _scrollToBottom();
-        update();
-        return;
+        await chatRepository.createNewChat(
+            messageData.chat.toJson(), messageData.chatId);
+        await chatRepository.sendFirstMessage(
+            messageData.chatId, messageData.message.toJson());
+      } else {
+        await chatRepository.sendMessages(messageData.message.toJson(),
+            messageData.chatId, messageData.chat.lastMessage.toJson());
       }
 
-      await chatRepository.sendMessages(
-          message.toJson(), chatId, chat.lastMessage.toJson());
       messageController.clear();
-      _scrollToBottom();
       clearReply();
-
-      update();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottom();
+        update();
+      });
     } catch (e) {
       showErrorSnackbar('Error', e.toString());
     }
+  }
+
+  Future<({MessageModel message, ChatModel chat, String chatId})>
+      _prepareMessageData(int index, bool isChated) async {
+    final users = [
+      currentUser.id,
+      isChated
+          ? chatedUserData[index]
+              .usersId
+              .firstWhere((item) => item != currentUser.id)
+          : friendData[index].id
+    ];
+
+    final message = MessageModel(
+        message: messageController.text,
+        id: currentUser.id,
+        sendAt: DateTime.now(),
+        repliedMessage: repliedMessage);
+
+    final chat = ChatModel(
+      lastMessage: message,
+      usersId: users,
+      usersDetails: [
+        {'UserId': users[0], 'UserName': currentUser.userName},
+        {'UserId': users[1], 'UserName': friendData[index].userName}
+      ],
+    );
+
+    users.sort();
+    final chatId = users.join('-');
+
+    return (message: message, chat: chat, chatId: chatId);
   }
 
   ///Delete Chat
